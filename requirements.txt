@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+cryptography
+pydantic
+requests
+streamlit
+openai
+python-dotenv
+python-multipart
+pydub
+streamlit-audiorecorder # sudo apt update && sudo apt install ffmpeg
