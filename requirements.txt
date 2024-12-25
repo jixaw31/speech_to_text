@@ -9,3 +9,11 @@ python-dotenv
 python-multipart
 pydub
 streamlit-audiorecorder # sudo apt update && sudo apt install ffmpeg
+
+langchain
+langchain-community
+langchain-cohere 
+# in case you don't want to use cohere, you can you OpenAI
+# langchain-openai
+langgraph 
+langgraph-checkpoint-sqlite
