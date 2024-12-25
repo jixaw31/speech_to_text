@@ -6,8 +6,8 @@ from io import BytesIO
 from fastapi import FastAPI, HTTPException
 import os
 from pydantic import BaseModel
-from chat import graph
-
+from graph import graph
+from langchain_core.messages import SystemMessage, HumanMessage
 
 # to locate and load .env file any where in the directory
 from dotenv import load_dotenv
@@ -29,6 +29,8 @@ app.add_middleware(
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+
+
 # ----------------- Audio File Upload Endpoint -----------------
 @app.post("/transcribe/")
 async def audio_transcription(file: UploadFile = File(...)):
@@ -39,9 +41,22 @@ async def audio_transcription(file: UploadFile = File(...)):
         audio = AudioSegment.from_file(audio_data)
         audio.export(converted_audio, format="wav")
 
+        config = {"configurable": {"thread_id": "1"}} # should change for each user.
+
         with open(converted_audio, "rb") as audio_file:
             transcription = client.audio.transcriptions.create(model="whisper-1", file=audio_file)
-            
+    
+            # updating graph with SystemMessage(the recorded strategy)
+            graph.update_state(
+                config,
+                {"messages": [HumanMessage(content = f"This is my strategy: {transcription.text}")]},
+            )
+            snapshot = graph.get_state(config)
+            existing_message = snapshot.values["messages"]
+            # for msg in snapshot.values["messages"]:
+            #     msg.pretty_print()
+            print(existing_message)
+
         return JSONResponse(content={"transcription": transcription.text})
     except Exception as e:
         print(e)
@@ -55,8 +70,6 @@ def root():
     return {"message": "Welcome to the Speech-to-Text API!"}
 
 # ----------------- Chat Endpoint -----------------
-
-
 # Define the API request and response models
 class ChatRequest(BaseModel):
     user_message: str
@@ -65,12 +78,11 @@ class ChatResponse(BaseModel):
     bot_reply: str
 
 def stream_graph_updates(user_input: ChatRequest):
-    config = {"configurable": {"thread_id": "1"}}
+    config = {"configurable": {"thread_id": "1"}} # should change for each user.
     for event in graph.stream({"messages": [("user", user_input)]}, config):
         for value in event.values():
             return value["messages"][-1].content
 
-# print(stream_graph_updates('hello'))
 
 @app.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):

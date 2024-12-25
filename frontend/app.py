@@ -4,6 +4,8 @@ import streamlit as st
 import requests
 
 BACKEND_URL = "http://localhost:8000"
+CHAT_API_URL = "http://localhost:8000/chat"
+
 
 st.title("Speech-to-Text Application")
 st.write("Convert your voice to text using OpenAI Whisper API!")
@@ -22,6 +24,7 @@ def post_transcribe(audio) :
 
 # ----------------- Real-Time Recording -----------------
 st.subheader("Audio Recording Transcription")
+# if st.button("Record and Transcribe", key="record_button"):
 recorded_audio = audiorecorder()
 if len(recorded_audio) > 0:
     ra = recorded_audio.export(format='wav')
@@ -37,30 +40,5 @@ if uploaded_audio is not None:
 
 
 #  Chatbot ---------------------------------------------
-# API endpoint
-API_URL = "http://localhost:8000/chat"
 
-st.title("Chatbot with Streamlit and FastAPI")
-st.write("Interact with your AI-powered chatbot below.")
-
-# User input
-
-# User input
-user_message = st.text_input("You:", placeholder="Type your message here...")
-
-
-if st.button("Send"):
-    if user_message.strip():
-        try:
-            # Send user message to FastAPI backend
-            response = requests.post(API_URL, json={"user_message": user_message})
-            if response.status_code == 200:
-                bot_reply = response.json()["bot_reply"]
-                st.text_area("Bot:", value=bot_reply, height=200)
-            else:
-                st.error(f"Error: {response.status_code} - {response.text}")
-        except Exception as e:
-            st.error(f"Failed to connect to the backend.")
-    else:
-        st.warning("Please enter a message before sending.")
 
